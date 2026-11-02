@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" type="image/png" href="icons/icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Productive"><meta name="theme-color" content="#000000"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" type="image/png" href="icons/icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Productive"><meta name="theme-color" content="#000000"><style>:root{color-scheme:light;box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Productive Life</title>
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 <script>
@@ -59,8 +59,13 @@ tailwind.config = {
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
         }
-        .pt-safe { padding-top: env(safe-area-inset-top, 47px); }
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 34px); }
+        .pt-safe { padding-top: calc(env(safe-area-inset-top, 0px) + 8px); }
+        .pb-safe { padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px); }
+        /* iPhone: niente scorrimento orizzontale e niente ingrandimento del testo in rotazione */
+        html, body { overflow-x: clip; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+        #appRoot { overflow-x: clip; min-height: 100dvh; }
+        .fab-safe { bottom: calc(env(safe-area-inset-bottom, 0px) + 72px); }
+        .toast-safe { top: calc(env(safe-area-inset-top, 0px) + 56px); }
         
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -88,7 +93,7 @@ html.dark body { background: #000000; color: #f4f4f5; }
 html:not(.dark) body { background: #f4f4f5; color: #18181b; }
 button, input, select, textarea { font-family: inherit; }
 </style>
-<div id="appRoot" class="bg-zinc-100 dark:bg-black text-zinc-900 dark:text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-blue-500 selection:text-white max-w-md mx-auto relative overflow-x-hidden shadow-2xl">
+<div id="appRoot" class="bg-zinc-100 dark:bg-black text-zinc-900 dark:text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-blue-500 selection:text-white max-w-md mx-auto relative shadow-2xl">
 
     <header id="mainHeader" class="pt-safe px-4 pb-3 bg-zinc-100/90 dark:bg-black/90 apple-blur border-b border-zinc-200 dark:border-zinc-800/80 sticky top-0 z-40 flex items-center justify-between transition-all">
         <div class="flex items-center space-x-2.5">
@@ -361,7 +366,7 @@ button, input, select, textarea { font-family: inherit; }
             </div>
 
             <!-- FLOATING CENTERED NEW TRANSACTION BUTTON (iOS Style) -->
-            <div class="fixed bottom-20 left-0 right-0 max-w-md mx-auto px-4 z-30 flex justify-center pointer-events-none">
+            <div class="fixed fab-safe left-0 right-0 max-w-md mx-auto px-4 z-30 flex justify-center pointer-events-none">
                 <button onclick="openTransactionModal()" class="pointer-events-auto px-6 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl shadow-blue-500/50 flex items-center justify-center space-x-2 text-sm font-bold transition active:scale-95 border border-blue-400/30 apple-blur" title="Nuova Transazione">
                     <i class="fa-solid fa-plus text-base"></i>
                     <span>Nuova Transazione</span>
@@ -688,7 +693,7 @@ button, input, select, textarea { font-family: inherit; }
     </div>
 
     <!-- TOAST NOTIFICATION -->
-    <div id="customToast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-zinc-900 border border-zinc-700 text-white text-xs px-4 py-2 rounded-xl shadow-2xl z-[60] transition-opacity duration-300 opacity-0 pointer-events-none"></div>
+    <div id="customToast" class="fixed toast-safe left-1/2 transform -translate-x-1/2 bg-zinc-900 border border-zinc-700 text-white text-xs px-4 py-2 rounded-xl shadow-2xl z-[60] transition-opacity duration-300 opacity-0 pointer-events-none"></div>
 
     <!-- HABIT MODAL -->
     <div id="habitModal" onclick="checkBackdropClose(event, 'habitModal')" class="fixed inset-0 bg-black/80 apple-blur z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
@@ -2257,24 +2262,28 @@ button, input, select, textarea { font-family: inherit; }
                     if (rec.frequency === 'custom_days') freqLabel = 'Giorni Specifici';
 
                     html += `
-                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-xl shrink-0 shadow-sm">${emoji}</div>
-                                <div>
-                                    <div class="flex items-center space-x-2">
-                                        <h5 class="font-bold text-xs text-zinc-900 dark:text-white">${esc(rec.name)}</h5>
-                                        <span class="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-500">${freqLabel}</span>
+                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-3.5 space-y-2.5 shadow-sm">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="flex items-center space-x-3 min-w-0">
+                                    <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-xl shrink-0 shadow-sm">${emoji}</div>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center space-x-2 min-w-0">
+                                            <h5 class="font-bold text-xs text-zinc-900 dark:text-white truncate">${esc(rec.name)}</h5>
+                                            <span class="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 shrink-0">${freqLabel}</span>
+                                        </div>
+                                        <p class="text-[10px] text-zinc-500 truncate">${esc(rec.category)} • Inizio: ${formatDateIT(rec.startDate) || 'Non spec.'}</p>
                                     </div>
-                                    <p class="text-[10px] text-zinc-500">${esc(rec.category)} • Inizio: ${formatDateIT(rec.startDate) || 'Non spec.'}</p>
                                 </div>
+                                <span class="text-sm font-extrabold ${colorClass} shrink-0">${sign}€${rec.amount.toFixed(2)}</span>
                             </div>
-                            <div class="flex items-center space-x-2">
-                                <span class="text-xs font-bold ${colorClass}">${sign}€${rec.amount.toFixed(2)}</span>
+                            <div class="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
                                 <button onclick="toggleRecurringStatus('${rec.id}')" class="px-3 py-1 rounded-full text-[10px] font-extrabold ${rec.active ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400'} transition cursor-pointer">
-                                    ${rec.active ? 'ATTIVO' : 'PAUSA'}
+                                    ${rec.active ? 'ATTIVO' : 'IN PAUSA'}
                                 </button>
-                                <button onclick="openEditRecurringModal('${rec.id}')" class="p-1.5 text-zinc-400 hover:text-blue-500 text-xs transition cursor-pointer"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="deleteRecurringPayment('${rec.id}')" class="p-1.5 text-zinc-400 hover:text-rose-500 text-xs transition cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
+                                <div class="flex items-center space-x-1">
+                                    <button onclick="openEditRecurringModal('${rec.id}')" class="p-2 text-zinc-400 hover:text-blue-500 text-xs transition cursor-pointer" title="Modifica"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="deleteRecurringPayment('${rec.id}')" class="p-2 text-zinc-400 hover:text-rose-500 text-xs transition cursor-pointer" title="Elimina"><i class="fa-solid fa-trash-can"></i></button>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -2283,7 +2292,7 @@ button, input, select, textarea { font-family: inherit; }
 
             html += `
                 </div>
-                <div class="fixed bottom-6 left-0 right-0 max-w-md mx-auto px-4 z-40 flex justify-center pointer-events-none">
+                <div class="fixed left-0 right-0 max-w-md mx-auto px-4 z-40 flex justify-center pointer-events-none" style="bottom: calc(env(safe-area-inset-bottom, 0px) + 16px)">
                     <button onclick="openNewRecurringModal()" class="pointer-events-auto px-6 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl shadow-blue-500/50 flex items-center justify-center space-x-2 text-sm font-bold transition active:scale-95 border border-blue-400/30 apple-blur">
                         <i class="fa-solid fa-plus text-base"></i>
                         <span>Nuovo Pagamento Ricorrente</span>
@@ -3870,18 +3879,18 @@ button, input, select, textarea { font-family: inherit; }
                     <div class="${card}">
                         <h4 class="${h}">${num(2)} Automazione Apple Pay</h4>
                         <ol class="space-y-3">
-                            ${step(1, `Apri l'app ${b('Comandi')} → scheda ${b('Automazione')} → ${b('+')} (o "Nuova automazione").`)}
-                            ${step(2, `Scegli ${b('Transazione')}. Seleziona le tue carte, lascia esercenti e categorie su "Qualsiasi", scegli ${b('Esegui immediatamente')} e tocca ${b('Avanti')}.`)}
-                            ${step(3, `Tocca ${b('Nuova automazione vuota')} → ${b('Aggiungi azione')} → cerca ${b('Ottieni contenuto dell\'URL')}.`)}
+                            ${step(1, `Apri l'app ${b('Comandi Rapidi')} → scheda ${b('Automazione')} → ${b('+')} (o "Nuova automazione").`)}
+                            ${step(2, `Scegli ${b('Transazione')} ("Quando qualsiasi carta viene avvicinata"). Tocca la freccia accanto: categorie ed esercenti su "Qualsiasi", ${b('Automazione')} accesa, ${b('Avvisa')} spento.`)}
+                            ${step(3, `Nella barra ${b('Cerca')} in basso scrivi "contenuti" e aggiungi ${b('Ottieni contenuti dell\'URL')}.`)}
                             ${step(4, `Tocca "URL" e incolla l'indirizzo: <div>${copyBtn('url', 'indirizzo')}</div>`)}
                             ${step(5, `Tocca la freccia ${b('›')} dell'azione per vedere le opzioni. Metodo: ${b('POST')}.`)}
                             ${step(6, `${b('Intestazioni')} → aggiungi: chiave <code class="px-1 rounded bg-zinc-100 dark:bg-zinc-800 font-bold">apikey</code>, valore la chiave: <div>${copyBtn('key', 'chiave')}</div>`)}
                             ${step(7, `${b('Corpo richiesta')}: ${b('JSON')}. Aggiungi 4 campi di tipo ${b('Testo')}:
                                 ${field('token', `il tuo codice ${copyBtn('token', 'codice')}`)}
-                                ${field('amount', `variabile ${b('Input comando')}, poi toccala e scegli ${b('Importo')}`)}
-                                ${field('merchant', `${b('Input comando')} → ${b('Esercente')}`)}
-                                ${field('card', `${b('Input comando')} → ${b('Carta o pass')}`)}`)}
-                            ${step(8, `Tocca ${b('Fine')}. Al prossimo pagamento con Apple Pay la spesa comparirà in ${b('Da confermare')}.`)}
+                                ${field('amount', `tocca il campo → ${b('Seleziona variabile')} → tocca il blocco "Quando… viene avvicinata" → scegli ${b('Importo')}`)}
+                                ${field('merchant', `${b('Esercente')}`)}
+                                ${field('card', `${b('Carta o biglietto')}`)}`)}
+                            ${step(8, `Per provarla tocca ▶: in ${b('Da confermare')} arriva un "Pagamento" con "€ ?". Al prossimo pagamento con Apple Pay la spesa comparirà in ${b('Da confermare')}.`)}
                         </ol>
                         <p class="text-[10px] text-zinc-400">I nomi possono cambiare leggermente in base alla versione di iOS.</p>
                     </div>
@@ -3889,10 +3898,10 @@ button, input, select, textarea { font-family: inherit; }
                     <div class="${card}">
                         <h4 class="${h}">${num(3)} Comando rapido per bonifici e contanti</h4>
                         <ol class="space-y-3">
-                            ${step(1, `In ${b('Comandi')} → scheda ${b('Comandi')} → ${b('+')}. Chiamalo "Aggiungi spesa".`)}
+                            ${step(1, `In ${b('Comandi Rapidi')} → scheda ${b('Comandi')} → ${b('+')}. Chiamalo "Aggiungi spesa".`)}
                             ${step(2, `Aggiungi ${b('Chiedi input')}: tipo ${b('Numero')}, domanda "Importo?".`)}
                             ${step(3, `Aggiungi un altro ${b('Chiedi input')}: tipo ${b('Testo')}, domanda "Descrizione?".`)}
-                            ${step(4, `Aggiungi ${b('Ottieni contenuto dell\'URL')} impostata come ai passi 4-6 sopra, con questi campi JSON:
+                            ${step(4, `Aggiungi ${b('Ottieni contenuti dell\'URL')} impostata come ai passi 4-6 sopra, con questi campi JSON:
                                 ${field('token', 'il tuo codice')}
                                 ${field('amount', `tocca ${b('Seleziona variabile')} e poi il ${b('primo')} "Input fornito"`)}
                                 ${field('merchant', `il ${b('secondo')} "Input fornito"`)}
