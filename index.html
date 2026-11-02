@@ -2827,7 +2827,7 @@ button, input, select, textarea { font-family: inherit; }
 
         // Importi del wallet oscurati (scelta per dispositivo, non sincronizzata).
         function isBalanceHidden() { return readRaw('pl_hide_balance') === '1'; }
-        function maskMoney(text) { return isBalanceHidden() ? '€ ••••' : text; }
+        function maskMoney(text) { return isBalanceHidden() ? '€ *******' : text; }
 
         function toggleHideBalance() {
             writeLocalRaw('pl_hide_balance', isBalanceHidden() ? '0' : '1');
@@ -2854,8 +2854,8 @@ button, input, select, textarea { font-family: inherit; }
                 else if (t.type === 'income') inc += t.amount;
             });
 
-            if (incomeEl) incomeEl.textContent = isBalanceHidden() ? '+€ ••••' : `+€${inc.toFixed(2)}`;
-            if (expenseEl) expenseEl.textContent = isBalanceHidden() ? '-€ ••••' : `-€${exp.toFixed(2)}`;
+            if (incomeEl) incomeEl.textContent = isBalanceHidden() ? '+€ *******' : `+€${inc.toFixed(2)}`;
+            if (expenseEl) expenseEl.textContent = isBalanceHidden() ? '-€ *******' : `-€${exp.toFixed(2)}`;
         }
 
         function renderHabits() {
@@ -4058,7 +4058,7 @@ button, input, select, textarea { font-family: inherit; }
                     <div class="${card}">
                         <h4 class="${h}">${num(1)} Il tuo codice personale</h4>
                         ${token
-                            ? `<div class="flex items-center justify-between gap-2"><code class="text-[11px] px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 truncate">${token.slice(0, 6)}••••••••${token.slice(-4)}</code>${copyBtn('token', 'codice')}</div>
+                            ? `<div class="flex items-center justify-between gap-2"><code class="text-[11px] px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 truncate">${token.slice(0, 6)}**************${token.slice(-4)}</code>${copyBtn('token', 'codice')}</div>
                                <div class="flex gap-2">
                                    <button onclick="sendIngestTest()" class="flex-grow py-2 rounded-xl bg-emerald-500 text-white text-xs font-bold active:scale-95">Invia un pagamento di prova</button>
                                    <button onclick="generateIngestToken()" class="px-3 py-2 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-xs font-bold active:scale-95">Rigenera</button>
