@@ -332,6 +332,7 @@ button, input, select, textarea { font-family: inherit; }
                                 <option value="ALL">Tutti i Tipi</option>
                                 <option value="expense">Solo Uscite</option>
                                 <option value="income">Solo Entrate</option>
+                                <option value="transfer">Solo Giroconti</option>
                             </select>
                         </div>
                         <div>
@@ -811,9 +812,10 @@ button, input, select, textarea { font-family: inherit; }
             </div>
             <form id="transactionForm" onsubmit="saveTransactionForm(event)" class="space-y-3">
                 <input type="hidden" id="editingTxId" value="">
-                <div class="grid grid-cols-2 gap-2 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
+                <div class="grid grid-cols-3 gap-2 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
                     <button type="button" id="typeExpenseBtn" onclick="setTransactionType('expense')" class="py-1.5 text-xs font-bold rounded-lg bg-rose-600 text-white shadow-sm transition">Uscita</button>
                     <button type="button" id="typeIncomeBtn" onclick="setTransactionType('income')" class="py-1.5 text-xs font-bold rounded-lg text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white transition">Entrata</button>
+                    <button type="button" id="typeTransferBtn" onclick="setTransactionType('transfer')" class="py-1.5 text-xs font-bold rounded-lg text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white transition">Giroconto</button>
                 </div>
                 <div>
                     <label class="block text-[10px] font-semibold uppercase text-zinc-400 mb-1">Importo (€)</label>
@@ -823,9 +825,17 @@ button, input, select, textarea { font-family: inherit; }
                     <label class="block text-[10px] font-semibold uppercase text-zinc-400 mb-1">Descrizione (Opzionale)</label>
                     <input type="text" id="txDescInput" placeholder="Es: Esselunga, Stipendio..." class="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500 dark:text-white">
                 </div>
-                <div>
+                <div id="txCategoryContainer">
                     <label class="block text-[10px] font-semibold uppercase text-zinc-400 mb-1">Categoria</label>
-                    <select id="txCategorySelect" required class="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs focus:outline-none text-zinc-800 dark:text-zinc-200"></select></div><div><label class="block text-[10px] font-semibold uppercase text-zinc-400 mb-1">Conto</label><select id="txAccountSelect" required class="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs focus:outline-none text-zinc-800 dark:text-zinc-200"></select>
+                    <select id="txCategorySelect" required class="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs focus:outline-none text-zinc-800 dark:text-zinc-200"></select>
+                </div>
+                <div>
+                    <label id="txAccountLabel" class="block text-[10px] font-semibold uppercase text-zinc-400 mb-1">Conto</label>
+                    <select id="txAccountSelect" required class="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs focus:outline-none text-zinc-800 dark:text-zinc-200"></select>
+                </div>
+                <div id="txToAccountContainer" class="hidden">
+                    <label class="block text-[10px] font-semibold uppercase text-zinc-400 mb-1">Verso il conto</label>
+                    <select id="txToAccountSelect" class="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs focus:outline-none text-zinc-800 dark:text-zinc-200"></select>
                 </div>
                 <div>
                     <label class="block text-[10px] font-semibold uppercase text-zinc-400 mb-1">Data</label>
@@ -956,6 +966,13 @@ button, input, select, textarea { font-family: inherit; }
         function applyTx(tx, dir) {
             const acc = accounts.find(a => String(a.id) === String(tx.accountId)) || accounts[0];
             if (!acc) return;
+            if (tx.type === 'transfer') {
+                // Giroconto: esce dal conto di partenza ed entra in quello di arrivo, il totale non cambia.
+                const to = accounts.find(a => String(a.id) === String(tx.toAccountId));
+                acc.balance = Math.round((acc.balance - dir * tx.amount) * 100) / 100;
+                if (to) to.balance = Math.round((to.balance + dir * tx.amount) * 100) / 100;
+                return;
+            }
             const sign = (tx.type === 'expense' ? -1 : 1) * dir;
             acc.balance = Math.round((acc.balance + sign * tx.amount) * 100) / 100;
         }
@@ -1131,7 +1148,7 @@ button, input, select, textarea { font-family: inherit; }
         // ===== Blocco con Face ID / Touch ID / Windows Hello =====
         // Usa una passkey del dispositivo solo per chiedere il riconoscimento del volto: è un blocco locale
         // dell'app (come quello delle app bancarie), vale solo sul dispositivo dove viene attivato e non si sincronizza.
-        const LOCK_AFTER_MS = 60 * 1000;
+        const LOCK_AFTER_MS = 5 * 60 * 1000;
         let lastHiddenAt = 0;
 
         function bufToB64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
@@ -1207,7 +1224,7 @@ button, input, select, textarea { font-family: inherit; }
                 <button type="button" onclick="${on ? 'disableLock()' : 'enableLock()'}" class="w-full rounded-xl bg-zinc-100 dark:bg-zinc-800/70 p-3 flex items-center justify-between gap-3 text-left">
                     <span class="min-w-0">
                         <span class="block text-xs font-bold">Blocco con Face ID</span>
-                        <span class="block text-[10px] text-zinc-500 dark:text-zinc-400">Chiede il volto all'apertura e dopo 1 minuto fuori dall'app. Solo su questo dispositivo.</span>
+                        <span class="block text-[10px] text-zinc-500 dark:text-zinc-400">Chiede il volto all'apertura e dopo 5 minuti fuori dall'app. Solo su questo dispositivo.</span>
                     </span>
                     <span class="w-9 h-5 shrink-0 rounded-full p-0.5 transition ${on ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-700'}"><span class="block w-4 h-4 rounded-full bg-white shadow transition-transform ${on ? 'translate-x-4' : ''}"></span></span>
                 </button>`;
@@ -1470,11 +1487,15 @@ button, input, select, textarea { font-family: inherit; }
             }
 
             filtered.forEach(t => {
-                const categoryObj = categories.find(c => c.name === t.category);
-                const emoji = categoryObj ? categoryObj.emoji : (t.type === 'expense' ? '💸' : '💰');
+                const isTransfer = t.type === 'transfer';
+                const categoryObj = isTransfer ? null : categories.find(c => c.name === t.category);
+                const emoji = isTransfer ? '⇄' : (categoryObj ? categoryObj.emoji : (t.type === 'expense' ? '💸' : '💰'));
                 const isExp = t.type === 'expense';
-                const sign = isExp ? '-' : '+';
-                const colorClass = isExp ? 'text-rose-500' : 'text-emerald-500';
+                const sign = isTransfer ? '' : (isExp ? '-' : '+');
+                const colorClass = isTransfer ? 'text-blue-500' : (isExp ? 'text-rose-500' : 'text-emerald-500');
+                const accountInfo = isTransfer
+                    ? ' • ' + esc(getAccount(t.accountId).name) + ' → ' + esc(getAccount(t.toAccountId).name)
+                    : (accounts.length > 1 ? ' • ' + esc(getAccount(t.accountId).name) : '');
 
                 container.innerHTML += `
                     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-3 flex items-center justify-between shadow-sm">
@@ -1482,7 +1503,7 @@ button, input, select, textarea { font-family: inherit; }
                             <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-xl shrink-0 shadow-sm">${emoji}</div>
                             <div>
                                 <h4 class="font-bold text-xs text-zinc-900 dark:text-white">${esc(t.category)}</h4>
-                                <p class="text-[10px] text-zinc-500">${esc(t.desc ? t.desc + ' • ' : '')}${formatDateIT(t.date)}${accounts.length > 1 ? ' • ' + esc(getAccount(t.accountId).name) : ''}</p>
+                                <p class="text-[10px] text-zinc-500">${esc(t.desc ? t.desc + ' • ' : '')}${formatDateIT(t.date)}${accountInfo}</p>
                             </div>
                         </div>
                         <div class="flex items-center space-x-3">
@@ -1997,7 +2018,7 @@ button, input, select, textarea { font-family: inherit; }
                 showToast("Devi mantenere almeno un conto!");
                 return;
             }
-            const inUse = transactions.some(t => String(t.accountId) === String(accId)) || recurringPayments.some(r => String(r.accountId) === String(accId));
+            const inUse = transactions.some(t => String(t.accountId) === String(accId) || String(t.toAccountId) === String(accId)) || recurringPayments.some(r => String(r.accountId) === String(accId));
             if (inUse) {
                 showToast("Il conto ha transazioni collegate: non si può eliminare");
                 return;
@@ -2288,6 +2309,7 @@ button, input, select, textarea { font-family: inherit; }
             const filteredTxs = transactions.filter(t => {
                 if (!t.date) return false;
                 const [y, m, d] = t.date.split('-');
+                if (t.type === 'transfer') return false;
                 if (typeFilter !== 'ALL' && t.type !== typeFilter) return false;
                 if (y !== yearVal) return false;
                 if (monthVal !== 'ALL' && m !== monthVal) return false;
@@ -2667,8 +2689,8 @@ button, input, select, textarea { font-family: inherit; }
             document.getElementById('txDescInput').value = '';
             document.getElementById('txDateInput').value = getLocalDateKey(new Date());
 
-            setTransactionType('expense');
             populateAccountSelect('txAccountSelect');
+            setTransactionType('expense');
             openModal('transactionModal');
         }
 
@@ -2683,28 +2705,42 @@ button, input, select, textarea { font-family: inherit; }
             document.getElementById('txDescInput').value = tx.desc || '';
             document.getElementById('txDateInput').value = tx.date || getLocalDateKey(new Date());
 
-            setTransactionType(tx.type || 'expense');
-            populateCategoryDropdown('txCategorySelect', tx.type || 'expense');
-            document.getElementById('txCategorySelect').value = tx.category;
             populateAccountSelect('txAccountSelect', tx.accountId);
+            setTransactionType(tx.type || 'expense');
+            if (tx.type === 'transfer') {
+                populateAccountSelect('txToAccountSelect', tx.toAccountId);
+            } else {
+                document.getElementById('txCategorySelect').value = tx.category;
+            }
 
             openModal('transactionModal');
         }
 
         function setTransactionType(type) {
-            currentTxType = type;
-            const expBtn = document.getElementById('typeExpenseBtn');
-            const incBtn = document.getElementById('typeIncomeBtn');
-
-            if (type === 'expense') {
-                expBtn.className = 'py-1.5 text-xs font-bold rounded-lg bg-rose-600 text-white shadow-sm transition';
-                incBtn.className = 'py-1.5 text-xs font-bold rounded-lg text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white transition';
-            } else {
-                incBtn.className = 'py-1.5 text-xs font-bold rounded-lg bg-emerald-600 text-white shadow-sm transition';
-                expBtn.className = 'py-1.5 text-xs font-bold rounded-lg text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white transition';
+            if (type === 'transfer' && accounts.length < 2) {
+                showToast("Per un giroconto aggiungi prima un secondo conto in Conti Correnti");
+                return;
             }
+            currentTxType = type;
+            const off = 'py-1.5 text-xs font-bold rounded-lg text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white transition';
+            const on = { expense: 'bg-rose-600', income: 'bg-emerald-600', transfer: 'bg-blue-600' };
+            [['expense', 'typeExpenseBtn'], ['income', 'typeIncomeBtn'], ['transfer', 'typeTransferBtn']].forEach(([t, id]) => {
+                document.getElementById(id).className = t === type ? `py-1.5 text-xs font-bold rounded-lg ${on[t]} text-white shadow-sm transition` : off;
+            });
 
-            populateCategoryDropdown('txCategorySelect', type);
+            const isTransfer = type === 'transfer';
+            const catSelect = document.getElementById('txCategorySelect');
+            document.getElementById('txCategoryContainer').classList.toggle('hidden', isTransfer);
+            catSelect.required = !isTransfer;
+            document.getElementById('txAccountLabel').textContent = isTransfer ? 'Dal conto' : 'Conto';
+            document.getElementById('txToAccountContainer').classList.toggle('hidden', !isTransfer);
+            if (isTransfer) {
+                const fromId = document.getElementById('txAccountSelect').value;
+                const other = accounts.find(a => String(a.id) !== String(fromId));
+                populateAccountSelect('txToAccountSelect', other && other.id);
+            } else {
+                populateCategoryDropdown('txCategorySelect', type);
+            }
         }
 
         function saveTransactionForm(e) {
@@ -2715,9 +2751,15 @@ button, input, select, textarea { font-family: inherit; }
             const category = document.getElementById('txCategorySelect').value;
             const date = document.getElementById('txDateInput').value;
             const accountId = document.getElementById('txAccountSelect').value || (accounts[0] && accounts[0].id);
+            const isTransfer = currentTxType === 'transfer';
+            const toAccountId = isTransfer ? document.getElementById('txToAccountSelect').value : null;
 
             if (amount <= 0) {
                 showToast("Inserisci un importo maggiore di zero");
+                return;
+            }
+            if (isTransfer && String(toAccountId) === String(accountId)) {
+                showToast("Scegli due conti diversi");
                 return;
             }
 
@@ -2727,10 +2769,11 @@ button, input, select, textarea { font-family: inherit; }
                     applyTx(tx, -1);
                     tx.amount = amount;
                     tx.desc = desc;
-                    tx.category = category;
+                    tx.category = isTransfer ? 'Giroconto' : category;
                     tx.type = currentTxType;
                     tx.date = date;
                     tx.accountId = accountId;
+                    if (isTransfer) tx.toAccountId = toAccountId; else delete tx.toAccountId;
                     applyTx(tx, 1);
                 }
             } else {
@@ -2741,11 +2784,12 @@ button, input, select, textarea { font-family: inherit; }
                     id: fromPending ? 'tx_ap_' + fromPending.id : 'tx_' + Date.now(),
                     amount: amount,
                     desc: desc,
-                    category: category,
+                    category: isTransfer ? 'Giroconto' : category,
                     type: currentTxType,
                     date: date,
                     accountId: accountId
                 };
+                if (isTransfer) newTx.toAccountId = toAccountId;
                 if (!transactions.some(t => t.id === newTx.id)) {
                     transactions.unshift(newTx);
                     applyTx(newTx, 1);
@@ -2779,7 +2823,7 @@ button, input, select, textarea { font-family: inherit; }
 
             targetList.forEach(t => {
                 if (t.type === 'expense') exp += t.amount;
-                else inc += t.amount;
+                else if (t.type === 'income') inc += t.amount;
             });
 
             if (incomeEl) incomeEl.textContent = `+€${inc.toFixed(2)}`;
