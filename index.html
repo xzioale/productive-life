@@ -1510,16 +1510,16 @@ button, input, select, textarea { font-family: inherit; }
                     : (accounts.length > 1 ? ' • ' + esc(getAccount(t.accountId).name) : '');
 
                 container.innerHTML += `
-                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-3 flex items-center justify-between shadow-sm">
-                        <div class="flex items-center space-x-3">
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-sm">
+                        <div class="flex items-center space-x-3 min-w-0">
                             <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-xl shrink-0 shadow-sm">${emoji}</div>
-                            <div>
-                                <h4 class="font-bold text-xs text-zinc-900 dark:text-white">${esc(t.category)}</h4>
-                                <p class="text-[10px] text-zinc-500">${esc(t.desc ? t.desc + ' • ' : '')}${formatDateIT(t.date)}${accountInfo}</p>
+                            <div class="min-w-0">
+                                <h4 class="font-bold text-xs text-zinc-900 dark:text-white truncate">${esc(t.category)}</h4>
+                                <p class="text-[10px] text-zinc-500 truncate">${esc(t.desc ? t.desc + ' • ' : '')}${formatDateIT(t.date)}${accountInfo}</p>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-3">
-                            <span class="text-xs font-bold ${colorClass}">${sign}€${t.amount.toFixed(2)}</span>
+                        <div class="flex items-center space-x-2 shrink-0">
+                            <span class="text-xs font-bold whitespace-nowrap ${colorClass}">${sign}€${t.amount.toFixed(2)}</span>
                             <div class="flex items-center space-x-1">
                                 <button type="button" onclick="openEditTransactionModal('${t.id}')" class="text-zinc-400 hover:text-blue-500 p-1.5 text-xs transition cursor-pointer" title="Modifica"><i class="fa-solid fa-pen"></i></button>
                                 <button type="button" onclick="deleteTransaction('${t.id}')" class="text-zinc-400 hover:text-rose-500 p-1.5 text-xs transition cursor-pointer" title="Elimina"><i class="fa-solid fa-trash-can"></i></button>
@@ -2431,7 +2431,7 @@ button, input, select, textarea { font-family: inherit; }
                                         <p class="text-[10px] text-zinc-500 truncate">${esc(rec.category)} • Inizio: ${formatDateIT(rec.startDate) || 'Non spec.'}</p>
                                     </div>
                                 </div>
-                                <span class="text-sm font-extrabold ${colorClass} shrink-0">${sign}€${rec.amount.toFixed(2)}</span>
+                                <span class="text-sm font-extrabold ${colorClass} shrink-0 whitespace-nowrap">${sign}€${rec.amount.toFixed(2)}</span>
                             </div>
                             <div class="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
                                 <button onclick="toggleRecurringStatus('${rec.id}')" class="px-3 py-1 rounded-full text-[10px] font-extrabold ${rec.active ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400'} transition cursor-pointer">
@@ -3946,7 +3946,7 @@ button, input, select, textarea { font-family: inherit; }
                                     <p class="text-[10px] text-zinc-500 truncate">${when} · ${origin}</p>
                                 </div>
                             </div>
-                            <span class="text-sm font-extrabold text-rose-500 shrink-0">${p.amount > 0 ? '-€' + Number(p.amount).toFixed(2) : '€ ?'}</span>
+                            <span class="text-sm font-extrabold text-rose-500 shrink-0 whitespace-nowrap">${p.amount > 0 ? '-€' + Number(p.amount).toFixed(2) : '€ ?'}</span>
                         </div>
                         <select id="pcat_${p.id}" class="w-full ${sel}">${catOpts}</select>
                         <div class="flex items-center gap-1.5">
