@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" type="image/png" href="icons/icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Productive"><meta name="theme-color" content="#000000"><style>:root{color-scheme:light;box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" type="image/png" href="icons/icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Productive"><meta name="theme-color" content="#000000"><style>:root{color-scheme:light;box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Productive Life</title>
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 <script>
@@ -63,6 +63,9 @@ tailwind.config = {
         .pb-safe { padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px); }
         /* iPhone: niente scorrimento orizzontale e niente ingrandimento del testo in rotazione */
         html, body { overflow-x: clip; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+        /* Nessuno zoom: niente doppio tocco, e campi a 16px così iOS non ingrandisce quando ci scrivi */
+        html { touch-action: manipulation; }
+        @media (pointer: coarse) { input, select, textarea { font-size: 16px !important; } }
         #appRoot { overflow-x: clip; min-height: 100dvh; }
         .fab-safe { bottom: calc(env(safe-area-inset-bottom, 0px) + 72px); }
         .toast-safe { top: calc(env(safe-area-inset-top, 0px) + 56px); }
@@ -1102,6 +1105,10 @@ button, input, select, textarea { font-family: inherit; }
             updateFinanceSummary();
             buildIconPicker();
         }
+
+        // Safari su iPhone ignora user-scalable=no: blocca a mano lo zoom con due dita.
+        ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
+        document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
         window.onload = function() {
             if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
