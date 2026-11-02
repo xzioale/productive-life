@@ -59,7 +59,9 @@ tailwind.config = {
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
         }
-        .pt-safe { padding-top: calc(env(safe-area-inset-top, 0px) + 12px); }
+        .pt-safe { padding-top: calc(env(safe-area-inset-top, 0px) + 8px); }
+        /* Intestazione principale un po' più in basso: sotto la Dynamic Island iOS sfuma il contenuto */
+        .pt-safe-header { padding-top: calc(env(safe-area-inset-top, 0px) + 14px); }
         .pb-safe { padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px); }
         /* iPhone: niente scorrimento orizzontale e niente ingrandimento del testo in rotazione */
         html, body { overflow-x: clip; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
@@ -98,22 +100,22 @@ button, input, select, textarea { font-family: inherit; }
 </style>
 <div id="appRoot" class="bg-zinc-100 dark:bg-black text-zinc-900 dark:text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-blue-500 selection:text-white max-w-md mx-auto relative shadow-2xl">
 
-    <header id="mainHeader" class="pt-safe px-4 pb-3.5 bg-zinc-100/90 dark:bg-black/90 apple-blur border-b border-zinc-200 dark:border-zinc-800/80 sticky top-0 z-40 flex items-center justify-between transition-all">
+    <header id="mainHeader" class="pt-safe-header px-4 pb-3 bg-zinc-100 dark:bg-black border-b border-zinc-200 dark:border-zinc-800/80 sticky top-0 z-40 flex items-center justify-between transition-all">
         <div class="flex items-center space-x-2.5">
             <div id="headerLeftIconContainer" class="flex items-center">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-                    <i class="fa-solid fa-bolt text-base"></i>
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                    <i class="fa-solid fa-bolt text-sm"></i>
                 </div>
             </div>
             <div>
-                <h1 id="mainHeaderTitle" class="font-extrabold text-lg tracking-tight leading-tight text-zinc-900 dark:text-white">Productive Life</h1>
-                <span id="currentDateDisplay" class="block text-xs font-medium text-zinc-500 dark:text-zinc-400">Caricamento...</span>
+                <h1 id="mainHeaderTitle" class="font-extrabold text-sm tracking-tight leading-none text-zinc-900 dark:text-white">Productive Life</h1>
+                <span id="currentDateDisplay" class="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Caricamento...</span>
             </div>
         </div>
 
         <div class="flex items-center space-x-2.5">
         <span id="syncDot" title="" class="hidden w-2 h-2 rounded-full bg-zinc-400 transition-colors"></span>
-        <button onclick="toggleTheme()" id="themeToggleBtn" class="w-9 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:text-amber-500 flex items-center justify-center transition active:scale-90" title="Cambia Tema">
+        <button onclick="toggleTheme()" id="themeToggleBtn" class="w-8 h-8 rounded-xl bg-zinc-200 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:text-amber-500 flex items-center justify-center transition active:scale-90" title="Cambia Tema">
             <i id="themeIcon" class="fa-solid fa-moon text-xs"></i>
         </button>
         </div>
@@ -1572,13 +1574,13 @@ button, input, select, textarea { font-family: inherit; }
                 const iconContainer = document.getElementById('headerLeftIconContainer');
                 if (tabId === 'habits') {
                     if (title) title.textContent = 'Productive Life';
-                    if (iconContainer) iconContainer.innerHTML = `<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-blue-500/20"><i class="fa-solid fa-bolt text-base"></i></div>`;
+                    if (iconContainer) iconContainer.innerHTML = `<div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-blue-500/20"><i class="fa-solid fa-bolt text-sm"></i></div>`;
                 } else if (tabId === 'tasks') {
                     if (title) title.textContent = 'To-Do';
-                    if (iconContainer) iconContainer.innerHTML = `<div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20"><i class="fa-solid fa-list-check text-base"></i></div>`;
+                    if (iconContainer) iconContainer.innerHTML = `<div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20"><i class="fa-solid fa-list-check text-sm"></i></div>`;
                 } else if (tabId === 'finance') {
                     if (title) title.textContent = 'Finanze Wallet';
-                    if (iconContainer) iconContainer.innerHTML = `<div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/20"><i class="fa-solid fa-wallet text-base"></i></div>`;
+                    if (iconContainer) iconContainer.innerHTML = `<div class="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/20"><i class="fa-solid fa-wallet text-sm"></i></div>`;
                 }
             }
         }
