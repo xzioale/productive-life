@@ -59,7 +59,7 @@ tailwind.config = {
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
         }
-        .pt-safe { padding-top: calc(env(safe-area-inset-top, 0px) + 8px); }
+        .pt-safe { padding-top: calc(env(safe-area-inset-top, 0px) + 12px); }
         .pb-safe { padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px); }
         /* iPhone: niente scorrimento orizzontale e niente ingrandimento del testo in rotazione */
         html, body { overflow-x: clip; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
@@ -98,22 +98,22 @@ button, input, select, textarea { font-family: inherit; }
 </style>
 <div id="appRoot" class="bg-zinc-100 dark:bg-black text-zinc-900 dark:text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-blue-500 selection:text-white max-w-md mx-auto relative shadow-2xl">
 
-    <header id="mainHeader" class="pt-safe px-4 pb-3 bg-zinc-100/90 dark:bg-black/90 apple-blur border-b border-zinc-200 dark:border-zinc-800/80 sticky top-0 z-40 flex items-center justify-between transition-all">
+    <header id="mainHeader" class="pt-safe px-4 pb-3.5 bg-zinc-100/90 dark:bg-black/90 apple-blur border-b border-zinc-200 dark:border-zinc-800/80 sticky top-0 z-40 flex items-center justify-between transition-all">
         <div class="flex items-center space-x-2.5">
             <div id="headerLeftIconContainer" class="flex items-center">
-                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-                    <i class="fa-solid fa-bolt text-sm"></i>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                    <i class="fa-solid fa-bolt text-base"></i>
                 </div>
             </div>
             <div>
-                <h1 id="mainHeaderTitle" class="font-extrabold text-sm tracking-tight leading-none text-zinc-900 dark:text-white">Productive Life</h1>
-                <span id="currentDateDisplay" class="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">Caricamento...</span>
+                <h1 id="mainHeaderTitle" class="font-extrabold text-lg tracking-tight leading-tight text-zinc-900 dark:text-white">Productive Life</h1>
+                <span id="currentDateDisplay" class="block text-xs font-medium text-zinc-500 dark:text-zinc-400">Caricamento...</span>
             </div>
         </div>
 
         <div class="flex items-center space-x-2.5">
         <span id="syncDot" title="" class="hidden w-2 h-2 rounded-full bg-zinc-400 transition-colors"></span>
-        <button onclick="toggleTheme()" id="themeToggleBtn" class="w-8 h-8 rounded-xl bg-zinc-200 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:text-amber-500 flex items-center justify-center transition active:scale-90" title="Cambia Tema">
+        <button onclick="toggleTheme()" id="themeToggleBtn" class="w-9 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:text-amber-500 flex items-center justify-center transition active:scale-90" title="Cambia Tema">
             <i id="themeIcon" class="fa-solid fa-moon text-xs"></i>
         </button>
         </div>
@@ -634,12 +634,28 @@ button, input, select, textarea { font-family: inherit; }
                     <button type="button" onclick="PLSync.signOut()" class="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 active:scale-95">Esci</button>
                 </div>
             </div>
+            <div id="lockBox"></div>
             <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">Copia il backup e conservalo in un posto sicuro. Per ripristinarlo, incolla qui il testo e premi Importa: i dati attuali verranno sostituiti.</p>
             <textarea id="backupText" rows="6" placeholder="Incolla qui un backup da importare..." class="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-[11px] font-mono focus:outline-none dark:text-white"></textarea>
             <div class="flex justify-end space-x-2 pt-1">
                 <button type="button" onclick="copyBackup()" class="px-3 py-2 rounded-xl text-xs font-bold bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 active:scale-95">Copia backup</button>
                 <button type="button" id="backupImportBtn" onclick="importBackup()" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white active:scale-95 shadow-md shadow-blue-500/20">Importa</button>
             </div>
+        </div>
+    </div>
+
+    <!-- BLOCCO CON FACE ID -->
+    <div id="lockScreen" class="hidden fixed inset-0 z-[110] bg-zinc-100 dark:bg-black flex items-center justify-center p-6">
+        <div class="w-full max-w-sm flex flex-col items-center text-center space-y-6">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-400 flex items-center justify-center text-white text-2xl shadow-lg shadow-blue-500/30">
+                <i class="fa-solid fa-bolt"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-extrabold tracking-tight">Productive Life</h2>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400">L'app è bloccata</p>
+            </div>
+            <button onclick="unlockApp(false)" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-md shadow-blue-500/30 active:scale-95 transition">Sblocca con Face ID</button>
+            <button onclick="lockFallback()" class="text-xs font-bold text-zinc-500 dark:text-zinc-400 hover:text-blue-500">Problemi con Face ID? Accedi con la password</button>
         </div>
     </div>
 
@@ -1110,6 +1126,98 @@ button, input, select, textarea { font-family: inherit; }
         ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
         document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
+        // ===== Blocco con Face ID / Touch ID / Windows Hello =====
+        // Usa una passkey del dispositivo solo per chiedere il riconoscimento del volto: è un blocco locale
+        // dell'app (come quello delle app bancarie), vale solo sul dispositivo dove viene attivato e non si sincronizza.
+        const LOCK_AFTER_MS = 60 * 1000;
+        let lastHiddenAt = 0;
+
+        function bufToB64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+        function b64ToBuf(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+        function isLockEnabled() { return !!readRaw('pl_lock_cred'); }
+
+        function showLockScreen() {
+            if (!isLockEnabled()) return;
+            const el = document.getElementById('lockScreen');
+            if (!el.classList.contains('hidden')) return;
+            el.classList.remove('hidden');
+            unlockApp(true);
+        }
+
+        // silent: tentativo automatico all'apertura, senza messaggi se il telefono vuole prima un tocco.
+        async function unlockApp(silent) {
+            try {
+                await navigator.credentials.get({ publicKey: {
+                    challenge: crypto.getRandomValues(new Uint8Array(32)),
+                    allowCredentials: [{ type: 'public-key', id: b64ToBuf(readRaw('pl_lock_cred')) }],
+                    userVerification: 'required',
+                    timeout: 60000
+                } });
+                document.getElementById('lockScreen').classList.add('hidden');
+            } catch (e) {
+                if (!silent) showToast("Sblocco non riuscito, riprova");
+            }
+        }
+
+        async function enableLock() {
+            if (!window.PublicKeyCredential || !navigator.credentials) {
+                showToast("Questo dispositivo non supporta lo sblocco col volto");
+                return;
+            }
+            try {
+                const cred = await navigator.credentials.create({ publicKey: {
+                    challenge: crypto.getRandomValues(new Uint8Array(32)),
+                    rp: { name: 'Productive Life' },
+                    user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'Productive Life', displayName: 'Blocco app Productive Life' },
+                    pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+                    authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },
+                    timeout: 60000
+                } });
+                writeLocalRaw('pl_lock_cred', bufToB64(cred.rawId));
+                showToast("Blocco con Face ID attivato");
+            } catch (e) {
+                showToast("Attivazione annullata");
+            }
+            renderLockBox();
+        }
+
+        // Se Face ID non funziona: si esce dall'account (i dati restano nel cloud) e si rientra con email e password.
+        function lockFallback() {
+            if (!confirm("Verrai disconnesso: poi rientri con email e password e i tuoi dati tornano dal cloud. Il blocco con Face ID andrà riattivato. Continuare?")) return;
+            try { localStorage.removeItem('pl_lock_cred'); } catch (e) {}
+            delete MEM_STORE['pl_lock_cred'];
+            if (window.PLSync && PLSync.configured) PLSync.signOut(true);
+            else document.getElementById('lockScreen').classList.add('hidden');
+        }
+
+        function disableLock() {
+            try { localStorage.removeItem('pl_lock_cred'); } catch (e) {}
+            delete MEM_STORE['pl_lock_cred'];
+            renderLockBox();
+            showToast("Blocco disattivato");
+        }
+
+        function renderLockBox() {
+            const box = document.getElementById('lockBox');
+            if (!box) return;
+            const on = isLockEnabled();
+            box.innerHTML = `
+                <button type="button" onclick="${on ? 'disableLock()' : 'enableLock()'}" class="w-full rounded-xl bg-zinc-100 dark:bg-zinc-800/70 p-3 flex items-center justify-between gap-3 text-left">
+                    <span class="min-w-0">
+                        <span class="block text-xs font-bold">Blocco con Face ID</span>
+                        <span class="block text-[10px] text-zinc-500 dark:text-zinc-400">Chiede il volto all'apertura e dopo 1 minuto fuori dall'app. Solo su questo dispositivo.</span>
+                    </span>
+                    <span class="w-9 h-5 shrink-0 rounded-full p-0.5 transition ${on ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-700'}"><span class="block w-4 h-4 rounded-full bg-white shadow transition-transform ${on ? 'translate-x-4' : ''}"></span></span>
+                </button>`;
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') lastHiddenAt = Date.now();
+            else if (lastHiddenAt && Date.now() - lastHiddenAt > LOCK_AFTER_MS) showLockScreen();
+        });
+        // Subito, prima che l'app finisca di caricarsi, così i dati non si vedono neanche per un attimo.
+        showLockScreen();
+
         window.onload = function() {
             if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
                 navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -1420,7 +1528,8 @@ button, input, select, textarea { font-family: inherit; }
             const now = new Date();
             const options = { weekday: 'long', day: 'numeric', month: 'long' };
             const el = document.getElementById('currentDateDisplay');
-            if (el) el.textContent = now.toLocaleDateString('it-IT', options);
+            const label = now.toLocaleDateString('it-IT', options);
+            if (el) el.textContent = label.charAt(0).toUpperCase() + label.slice(1);
         }
 
         function showToast(msg) {
@@ -1463,13 +1572,13 @@ button, input, select, textarea { font-family: inherit; }
                 const iconContainer = document.getElementById('headerLeftIconContainer');
                 if (tabId === 'habits') {
                     if (title) title.textContent = 'Productive Life';
-                    if (iconContainer) iconContainer.innerHTML = `<div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-blue-500/20"><i class="fa-solid fa-bolt text-sm"></i></div>`;
+                    if (iconContainer) iconContainer.innerHTML = `<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-blue-500/20"><i class="fa-solid fa-bolt text-base"></i></div>`;
                 } else if (tabId === 'tasks') {
                     if (title) title.textContent = 'To-Do';
-                    if (iconContainer) iconContainer.innerHTML = `<div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20"><i class="fa-solid fa-list-check text-sm"></i></div>`;
+                    if (iconContainer) iconContainer.innerHTML = `<div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20"><i class="fa-solid fa-list-check text-base"></i></div>`;
                 } else if (tabId === 'finance') {
                     if (title) title.textContent = 'Finanze Wallet';
-                    if (iconContainer) iconContainer.innerHTML = `<div class="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/20"><i class="fa-solid fa-wallet text-sm"></i></div>`;
+                    if (iconContainer) iconContainer.innerHTML = `<div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/20"><i class="fa-solid fa-wallet text-base"></i></div>`;
                 }
             }
         }
@@ -3519,6 +3628,7 @@ button, input, select, textarea { font-family: inherit; }
 
         function openBackupModal() {
             if (window.PLSync) PLSync.renderAccountBox();
+            renderLockBox();
             const ta = document.getElementById('backupText');
             if (ta) ta.value = '';
             backupImportArmed = false;

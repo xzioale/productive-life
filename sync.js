@@ -276,8 +276,8 @@
         }
     }
 
-    async function signOut() {
-        if (!confirm('Uscire dall\'account? I dati restano salvati nel cloud e su questo dispositivo verranno cancellati.')) return;
+    async function signOut(skipConfirm) {
+        if (skipConfirm !== true && !confirm('Uscire dall\'account? I dati restano salvati nel cloud e su questo dispositivo verranno cancellati.')) return;
         await syncNow();
         if (client) await client.auth.signOut();
         SYNC_KEYS.concat(['pl_dirty']).forEach(k => { try { localStorage.removeItem(k); } catch (err) {} });
