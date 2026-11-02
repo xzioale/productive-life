@@ -305,6 +305,9 @@ button, input, select, textarea { font-family: inherit; }
                 </div>
             </div>
 
+            <!-- PAGAMENTI DA CONFERMARE (Apple Pay / comando rapido) -->
+            <div id="pendingPaymentsBox" class="hidden"></div>
+
             <!-- TRANSACTION HISTORY WITH 2x2 GRID FILTERS -->
             <div class="flex-grow flex flex-col space-y-3 pb-24">
                 <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-3 space-y-2.5 shadow-sm">
@@ -476,6 +479,10 @@ button, input, select, textarea { font-family: inherit; }
                     <div class="w-6 h-6 rounded-md bg-blue-500/10 text-blue-500 flex items-center justify-center"><i class="fa-solid fa-rotate"></i></div>
                     <span>Pagamenti Ricorrenti</span>
                 </button>
+                <button onclick="closeFinanceSidebar(); openFinanceSubpage('applepay');" class="w-full flex items-center space-x-3 px-3 py-3 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm font-semibold transition text-left text-zinc-700 dark:text-zinc-200">
+                    <div class="w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-500 flex items-center justify-center"><i class="fa-solid fa-bolt"></i></div>
+                    <span>Spese automatiche</span>
+                </button>
             </div>
 
             <div class="p-4 border-t border-zinc-200 dark:border-zinc-800">
@@ -614,7 +621,10 @@ button, input, select, textarea { font-family: inherit; }
                     <p id="accountEmail" class="text-xs font-bold truncate"></p>
                     <p id="syncStatusText" class="text-[10px] text-zinc-500 dark:text-zinc-400"></p>
                 </div>
-                <button type="button" onclick="PLSync.signOut()" class="shrink-0 px-3 py-2 rounded-xl text-xs font-bold bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 active:scale-95">Esci</button>
+                <div class="shrink-0 flex flex-col gap-1.5">
+                    <button type="button" onclick="document.getElementById('newPassword1').value = ''; document.getElementById('newPassword2').value = ''; openModal('passwordModal')" class="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-blue-600/10 text-blue-600 dark:text-blue-400 active:scale-95">Cambia password</button>
+                    <button type="button" onclick="PLSync.signOut()" class="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 active:scale-95">Esci</button>
+                </div>
             </div>
             <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">Copia il backup e conservalo in un posto sicuro. Per ripristinarlo, incolla qui il testo e premi Importa: i dati attuali verranno sostituiti.</p>
             <textarea id="backupText" rows="6" placeholder="Incolla qui un backup da importare..." class="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-[11px] font-mono focus:outline-none dark:text-white"></textarea>
@@ -622,6 +632,30 @@ button, input, select, textarea { font-family: inherit; }
                 <button type="button" onclick="copyBackup()" class="px-3 py-2 rounded-xl text-xs font-bold bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 active:scale-95">Copia backup</button>
                 <button type="button" id="backupImportBtn" onclick="importBackup()" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white active:scale-95 shadow-md shadow-blue-500/20">Importa</button>
             </div>
+        </div>
+    </div>
+
+    <!-- CAMBIO PASSWORD -->
+    <div id="passwordModal" onclick="checkBackdropClose(event, 'passwordModal')" class="fixed inset-0 bg-black/80 apple-blur z-[90] flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-white dark:bg-zinc-900 border-t sm:border border-zinc-200 dark:border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl space-y-3.5 pb-safe">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-bold">Cambia password</h3>
+                <button type="button" onclick="closeModal('passwordModal')" class="text-zinc-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            <form onsubmit="PLSync.changePassword(event)" class="space-y-3">
+                <div>
+                    <label class="block text-[10px] font-semibold uppercase text-zinc-400 mb-1">Nuova password</label>
+                    <input type="password" id="newPassword1" autocomplete="new-password" required minlength="6" class="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm focus:outline-none dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold uppercase text-zinc-400 mb-1">Ripeti la nuova password</label>
+                    <input type="password" id="newPassword2" autocomplete="new-password" required minlength="6" class="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm focus:outline-none dark:text-white">
+                </div>
+                <div class="flex justify-end space-x-2 pt-1">
+                    <button type="button" onclick="closeModal('passwordModal')" class="px-3 py-2 rounded-xl text-xs font-medium text-zinc-500 dark:text-zinc-400">Annulla</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white active:scale-95">Salva</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1083,6 +1117,7 @@ button, input, select, textarea { font-family: inherit; }
             habits = loadLS('productive_habits') || habits;
             tasks = loadLS('productive_tasks') || tasks;
             hideCompletedTasks = loadLS('productive_tasks_hide_done') === true;
+            autoRules = loadLS('productive_fin_autorules') || autoRules;
         }
 
         // Ridisegna tutte le schermate senza toccare filtri e selezioni dell'utente.
@@ -1093,6 +1128,7 @@ button, input, select, textarea { font-family: inherit; }
             renderTasks();
             renderTaskComposer();
             renderFinanceTransactions();
+            renderPendingPayments();
             const tasksSidebar = document.getElementById('tasksSidebarModal');
             if (tasksSidebar && !tasksSidebar.classList.contains('hidden')) renderTasksSidebar();
         }
@@ -1740,6 +1776,10 @@ button, input, select, textarea { font-family: inherit; }
                 if (titleEl) titleEl.textContent = 'Pagamenti Ricorrenti';
                 if (iconEl) iconEl.innerHTML = '<i class="fa-solid fa-rotate text-blue-500"></i>';
                 renderPagamentiSubpage(bodyEl);
+            } else if (pageName === 'applepay') {
+                if (titleEl) titleEl.textContent = 'Spese automatiche';
+                if (iconEl) iconEl.innerHTML = '<i class="fa-solid fa-bolt text-emerald-500"></i>';
+                renderApplePaySubpage(bodyEl);
             }
         }
 
@@ -2493,6 +2533,7 @@ button, input, select, textarea { font-family: inherit; }
         }
 
         function openTransactionModal() {
+            pendingBeingEdited = null;
             document.getElementById('editingTxId').value = '';
             document.getElementById('txModalTitle').textContent = 'Nuova Transazione';
             document.getElementById('txAmountInput').value = '';
@@ -2508,6 +2549,7 @@ button, input, select, textarea { font-family: inherit; }
             const tx = transactions.find(t => String(t.id) === String(txId));
             if (!tx) return;
 
+            pendingBeingEdited = null;
             document.getElementById('editingTxId').value = tx.id;
             document.getElementById('txModalTitle').textContent = 'Modifica Transazione';
             document.getElementById('txAmountInput').value = tx.amount;
@@ -2565,8 +2607,11 @@ button, input, select, textarea { font-family: inherit; }
                     applyTx(tx, 1);
                 }
             } else {
+                // Se arriva da "Da confermare" usa un id legato al pagamento, così non si duplica.
+                const fromPending = pendingBeingEdited;
+                pendingBeingEdited = null;
                 const newTx = {
-                    id: 'tx_' + Date.now(),
+                    id: fromPending ? 'tx_ap_' + fromPending.id : 'tx_' + Date.now(),
                     amount: amount,
                     desc: desc,
                     category: category,
@@ -2574,8 +2619,14 @@ button, input, select, textarea { font-family: inherit; }
                     date: date,
                     accountId: accountId
                 };
-                transactions.unshift(newTx);
-                applyTx(newTx, 1);
+                if (!transactions.some(t => t.id === newTx.id)) {
+                    transactions.unshift(newTx);
+                    applyTx(newTx, 1);
+                }
+                if (fromPending) {
+                    learnFromPending(fromPending, category, accountId);
+                    PLSync.claimPending(fromPending.id).then(renderPendingPayments);
+                }
             }
 
             saveLS('productive_fin_accounts', JSON.stringify(accounts));
@@ -3469,7 +3520,8 @@ button, input, select, textarea { font-family: inherit; }
                 transactions: transactions,
                 recurring: recurringPayments,
                 habits: habits,
-                tasks: tasks
+                tasks: tasks,
+                autorules: autoRules
             });
         }
 
@@ -3511,6 +3563,10 @@ button, input, select, textarea { font-family: inherit; }
             recurringPayments = Array.isArray(data.recurring) ? data.recurring : [];
             habits = data.habits;
             tasks = Array.isArray(data.tasks) ? data.tasks : [];
+            if (data.autorules && data.autorules.merchants) {
+                autoRules = data.autorules;
+                saveLS('productive_fin_autorules', JSON.stringify(autoRules));
+            }
 
             saveLS('productive_fin_categories', JSON.stringify(categories));
             saveLS('productive_fin_accounts', JSON.stringify(accounts));
@@ -3555,6 +3611,311 @@ button, input, select, textarea { font-family: inherit; }
             closeModal('taskEditModal');
             renderTasks();
             showToast("Attività aggiornata!");
+        }
+
+        // ===== Spese automatiche: pagamenti arrivati dall'iPhone in attesa di conferma =====
+        let autoRules = loadLS('productive_fin_autorules') || { merchants: {}, cards: {}, autoConfirm: false };
+        let pendingBeingEdited = null;
+
+        function normKey(s) {
+            return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z]+/g, ' ').trim();
+        }
+
+        // Categoria e conto proposti per un pagamento, in base agli esercenti e alle carte già confermati.
+        function suggestForPending(p) {
+            const m = normKey(p.merchant);
+            let rule = m ? autoRules.merchants[m] : null;
+            if (!rule && m) {
+                const key = Object.keys(autoRules.merchants).find(k => k.length >= 4 && (m.includes(k) || k.includes(m)));
+                if (key) rule = autoRules.merchants[key];
+            }
+            const category = rule && categories.some(c => c.name === rule.category) ? rule.category : '';
+            const cardAcc = p.card && p.source !== 'manual' ? autoRules.cards[normKey(p.card)] : null;
+            const accountId = [cardAcc, rule && rule.accountId].find(id => id && accounts.some(a => String(a.id) === String(id))) || (accounts[0] && accounts[0].id);
+            return { category, accountId };
+        }
+
+        function learnFromPending(p, category, accountId) {
+            const m = normKey(p.merchant);
+            if (m) autoRules.merchants[m] = { category, accountId };
+            if (p.card && p.source !== 'manual') autoRules.cards[normKey(p.card)] = accountId;
+            saveLS('productive_fin_autorules', JSON.stringify(autoRules));
+        }
+
+        function pendingDateKey(p) {
+            return getLocalDateKey(p.created_at ? new Date(p.created_at) : new Date());
+        }
+
+        // Chiamata da sync.js ogni volta che la lista dei pagamenti in attesa cambia.
+        window.onPendingPayments = function () {
+            if (autoRules.autoConfirm) {
+                PLSync.getPending().forEach(p => {
+                    const s = suggestForPending(p);
+                    if (s.category && p.amount > 0) confirmPending(p.id, s.category, s.accountId, true);
+                });
+            }
+            renderPendingPayments();
+        };
+
+        async function confirmPending(id, category, accountId, silent) {
+            const p = PLSync.getPending().find(x => x.id === id);
+            if (!p) return;
+            if (!(p.amount > 0)) { showToast("Importo non letto: usa la matita per inserirlo"); return; }
+            if (!category) { showToast("Scegli una categoria"); return; }
+            const won = await PLSync.claimPending(id);
+            if (won === null) { showToast("Serve la connessione per confermare"); return; }
+            if (won) {
+                const txId = 'tx_ap_' + p.id;
+                if (!transactions.some(t => t.id === txId)) {
+                    const tx = { id: txId, amount: Number(p.amount), desc: p.merchant || '', category, type: 'expense', date: pendingDateKey(p), accountId };
+                    transactions.unshift(tx);
+                    applyTx(tx, 1);
+                    saveLS('productive_fin_accounts', JSON.stringify(accounts));
+                    saveLS('productive_fin_transactions', JSON.stringify(transactions));
+                }
+                learnFromPending(p, category, accountId);
+                if (!silent) showToast(`Aggiunta: ${p.merchant || category} -€${Number(p.amount).toFixed(2)}`);
+            }
+            renderPendingPayments();
+            renderFinanceTransactions();
+        }
+
+        function confirmPendingRow(id) {
+            const cat = document.getElementById('pcat_' + id);
+            const acc = document.getElementById('pacc_' + id);
+            confirmPending(id, cat ? cat.value : '', acc ? acc.value : (accounts[0] && accounts[0].id), false);
+        }
+
+        async function confirmAllPending() {
+            const ready = PLSync.getPending().filter(p => p.amount > 0 && document.getElementById('pcat_' + p.id) && document.getElementById('pcat_' + p.id).value);
+            for (const p of ready) {
+                const acc = document.getElementById('pacc_' + p.id);
+                await confirmPending(p.id, document.getElementById('pcat_' + p.id).value, acc ? acc.value : (accounts[0] && accounts[0].id), true);
+            }
+            showToast(`${ready.length} spese confermate`);
+        }
+
+        function editPending(id) {
+            const p = PLSync.getPending().find(x => x.id === id);
+            if (!p) return;
+            const s = suggestForPending(p);
+            openTransactionModal();
+            pendingBeingEdited = p;
+            document.getElementById('txModalTitle').textContent = 'Conferma pagamento';
+            document.getElementById('txAmountInput').value = p.amount > 0 ? Number(p.amount).toFixed(2) : '';
+            document.getElementById('txDescInput').value = p.merchant || '';
+            document.getElementById('txDateInput').value = pendingDateKey(p);
+            if (s.category) document.getElementById('txCategorySelect').value = s.category;
+            populateAccountSelect('txAccountSelect', s.accountId);
+        }
+
+        async function ignorePending(id) {
+            const won = await PLSync.claimPending(id);
+            if (won === null) { showToast("Serve la connessione"); return; }
+            renderPendingPayments();
+            showToast("Pagamento ignorato");
+        }
+
+        function renderPendingPayments() {
+            const box = document.getElementById('pendingPaymentsBox');
+            if (!box) return;
+            const list = window.PLSync ? PLSync.getPending() : [];
+            box.classList.toggle('hidden', list.length === 0);
+            if (!list.length) { box.innerHTML = ''; return; }
+
+            const expenseCats = categories.filter(c => c.type !== 'income');
+            const readyCount = list.filter(p => p.amount > 0 && suggestForPending(p).category).length;
+            const sel = 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-[11px] font-bold text-zinc-800 dark:text-zinc-200 focus:outline-none';
+            const iconBtn = 'w-8 h-8 shrink-0 rounded-lg flex items-center justify-center active:scale-90 transition';
+
+            const rows = list.map(p => {
+                const s = suggestForPending(p);
+                const cat = categories.find(c => c.name === s.category);
+                const d = p.created_at ? new Date(p.created_at) : new Date();
+                const when = `${dayLabel(getLocalDateKey(d))} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                const origin = p.source === 'manual' ? 'Inserita a mano' : ('Apple Pay' + (p.card ? ' · ' + esc(p.card) : ''));
+                const catOpts = `<option value="">Scegli categoria…</option>` + expenseCats.map(c => `<option value="${esc(c.name)}" ${c.name === s.category ? 'selected' : ''}>${c.emoji} ${esc(c.name)}</option>`).join('');
+                const accOpts = accounts.map(a => `<option value="${esc(a.id)}" ${String(a.id) === String(s.accountId) ? 'selected' : ''}>${esc(a.name)}</option>`).join('');
+                return `
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-lg shrink-0">${cat ? cat.emoji : '💳'}</div>
+                                <div class="min-w-0">
+                                    <h4 class="font-bold text-xs truncate text-zinc-900 dark:text-white">${esc(p.merchant || 'Pagamento')}</h4>
+                                    <p class="text-[10px] text-zinc-500 truncate">${when} · ${origin}</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-extrabold text-rose-500 shrink-0">${p.amount > 0 ? '-€' + Number(p.amount).toFixed(2) : '€ ?'}</span>
+                        </div>
+                        <select id="pcat_${p.id}" class="w-full ${sel}">${catOpts}</select>
+                        <div class="flex items-center gap-1.5">
+                            ${accounts.length > 1 ? `<select id="pacc_${p.id}" class="flex-grow min-w-0 ${sel}">${accOpts}</select>` : '<span class="flex-grow"></span>'}
+                            <button onclick="confirmPendingRow('${p.id}')" title="Conferma" class="${iconBtn} bg-emerald-500 text-white"><i class="fa-solid fa-check text-xs"></i></button>
+                            <button onclick="editPending('${p.id}')" title="Modifica" class="${iconBtn} bg-zinc-200 dark:bg-zinc-800 text-zinc-500"><i class="fa-solid fa-pen text-xs"></i></button>
+                            <button onclick="ignorePending('${p.id}')" title="Ignora" class="${iconBtn} bg-zinc-200 dark:bg-zinc-800 text-zinc-500"><i class="fa-solid fa-xmark text-xs"></i></button>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            box.innerHTML = `
+                <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-extrabold text-xs tracking-tight flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                            <i class="fa-solid fa-bolt"></i> Da confermare
+                            <span class="px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px]">${list.length}</span>
+                        </h3>
+                        ${readyCount > 1 ? `<button onclick="confirmAllPending()" class="px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-[11px] font-bold active:scale-95">Conferma tutte (${readyCount})</button>` : ''}
+                    </div>
+                    ${rows}
+                </div>`;
+        }
+
+        // ===== Pagina "Spese automatiche": codice personale, guida ai comandi dell'iPhone, regole imparate =====
+        function copyText(text, label) {
+            const fallback = () => {
+                const ta = document.getElementById('backupText');
+                openBackupModal();
+                ta.value = text;
+                ta.focus();
+                ta.select();
+                showToast("Seleziona e copia il testo");
+            };
+            try {
+                navigator.clipboard.writeText(text).then(() => showToast(`${label} copiato`)).catch(fallback);
+            } catch (e) {
+                fallback();
+            }
+        }
+
+        function copyIngest(what) {
+            if (what === 'url') copyText(PLSync.ingestUrl(), 'Indirizzo');
+            else if (what === 'key') copyText(PLSync.anonKey(), 'Chiave');
+            else if (what === 'token') copyText(readRaw('productive_ingest_token') || '', 'Codice');
+        }
+
+        async function generateIngestToken() {
+            if (readRaw('productive_ingest_token') && !confirm('Generare un nuovo codice? Quello vecchio smetterà di funzionare e dovrai aggiornarlo nei comandi dell\'iPhone.')) return;
+            const token = await PLSync.createIngestToken();
+            if (!token) { showToast("Non riesco a generare il codice: controlla la connessione"); return; }
+            saveLS('productive_ingest_token', token);
+            renderApplePaySubpage(document.getElementById('subpageBody'));
+            showToast("Codice generato");
+        }
+
+        async function sendIngestTest() {
+            const token = readRaw('productive_ingest_token');
+            if (!token) { showToast("Genera prima il codice"); return; }
+            const ok = await PLSync.sendTestPayment(token);
+            showToast(ok ? "Prova inviata: la trovi in Finanze → Da confermare" : "Prova non riuscita: controlla la connessione o rigenera il codice");
+            if (ok) PLSync.loadPending();
+        }
+
+        function toggleAutoConfirm() {
+            autoRules.autoConfirm = !autoRules.autoConfirm;
+            saveLS('productive_fin_autorules', JSON.stringify(autoRules));
+            renderApplePaySubpage(document.getElementById('subpageBody'));
+            if (autoRules.autoConfirm) window.onPendingPayments();
+        }
+
+        function deleteAutoRule(key) {
+            delete autoRules.merchants[key];
+            saveLS('productive_fin_autorules', JSON.stringify(autoRules));
+            renderApplePaySubpage(document.getElementById('subpageBody'));
+        }
+
+        function renderApplePaySubpage(bodyEl) {
+            if (!bodyEl) return;
+            if (!window.PLSync || !PLSync.isActive()) {
+                bodyEl.innerHTML = `<div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 text-center text-zinc-400 text-xs">Per usare le spese automatiche devi essere collegato con il tuo account.</div>`;
+                return;
+            }
+            const token = readRaw('productive_ingest_token');
+            const card = 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 space-y-3 shadow-sm';
+            const h = 'font-extrabold text-sm flex items-center gap-2';
+            const num = n => `<span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center shrink-0">${n}</span>`;
+            const copyBtn = (what, label) => `<button onclick="copyIngest('${what}')" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-bold active:scale-95 whitespace-nowrap">Copia ${label}</button>`;
+            const step = (n, html) => `<li class="flex gap-2.5"><span class="text-[11px] font-black text-blue-500 w-4 shrink-0 text-right">${n}.</span><div class="text-xs leading-relaxed text-zinc-700 dark:text-zinc-300 space-y-1.5 min-w-0">${html}</div></li>`;
+            const b = t => `<b class="text-zinc-900 dark:text-white">${t}</b>`;
+            const field = (k, v) => `<div class="flex items-start gap-2 text-[11px]"><code class="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-bold shrink-0">${k}</code><span>→ ${v}</span></div>`;
+
+            const rules = Object.entries(autoRules.merchants).sort((a, c) => a[0] < c[0] ? -1 : 1);
+            const rulesHtml = rules.length
+                ? rules.map(([k, r]) => {
+                    const c = categories.find(x => x.name === r.category);
+                    return `<div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
+                        <span class="text-xs font-semibold truncate capitalize">${esc(k)}</span>
+                        <span class="flex items-center gap-2 shrink-0"><span class="text-[11px] text-zinc-500">${c ? c.emoji : ''} ${esc(r.category)}</span>
+                        <button onclick="deleteAutoRule('${esc(k).replace(/'/g, '&#39;')}')" class="p-1 text-zinc-400 hover:text-rose-500 text-xs"><i class="fa-solid fa-xmark"></i></button></span>
+                    </div>`;
+                }).join('')
+                : `<p class="text-[11px] text-zinc-400">Ancora nessuno: ogni volta che confermi una spesa, l'app ricorda la categoria di quell'esercente.</p>`;
+
+            bodyEl.innerHTML = `
+                <div class="space-y-4 pb-10">
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed px-1">Quando paghi con Apple Pay, l'iPhone manda la spesa all'app e la trovi in ${b('Finanze → Da confermare')}. Prepara tutto una volta seguendo questi passi, meglio direttamente dall'iPhone.</p>
+
+                    <div class="${card}">
+                        <h4 class="${h}">${num(1)} Il tuo codice personale</h4>
+                        ${token
+                            ? `<div class="flex items-center justify-between gap-2"><code class="text-[11px] px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 truncate">${token.slice(0, 6)}••••••••${token.slice(-4)}</code>${copyBtn('token', 'codice')}</div>
+                               <div class="flex gap-2">
+                                   <button onclick="sendIngestTest()" class="flex-grow py-2 rounded-xl bg-emerald-500 text-white text-xs font-bold active:scale-95">Invia un pagamento di prova</button>
+                                   <button onclick="generateIngestToken()" class="px-3 py-2 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-xs font-bold active:scale-95">Rigenera</button>
+                               </div>`
+                            : `<p class="text-[11px] text-zinc-500">Serve all'iPhone per inviare le spese al tuo account senza password. Non condividerlo.</p>
+                               <button onclick="generateIngestToken()" class="w-full py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold active:scale-95">Genera il codice</button>`}
+                    </div>
+
+                    <div class="${card}">
+                        <h4 class="${h}">${num(2)} Automazione Apple Pay</h4>
+                        <ol class="space-y-3">
+                            ${step(1, `Apri l'app ${b('Comandi')} → scheda ${b('Automazione')} → ${b('+')} (o "Nuova automazione").`)}
+                            ${step(2, `Scegli ${b('Transazione')}. Seleziona le tue carte, lascia esercenti e categorie su "Qualsiasi", scegli ${b('Esegui immediatamente')} e tocca ${b('Avanti')}.`)}
+                            ${step(3, `Tocca ${b('Nuova automazione vuota')} → ${b('Aggiungi azione')} → cerca ${b('Ottieni contenuto dell\'URL')}.`)}
+                            ${step(4, `Tocca "URL" e incolla l'indirizzo: <div>${copyBtn('url', 'indirizzo')}</div>`)}
+                            ${step(5, `Tocca la freccia ${b('›')} dell'azione per vedere le opzioni. Metodo: ${b('POST')}.`)}
+                            ${step(6, `${b('Intestazioni')} → aggiungi: chiave <code class="px-1 rounded bg-zinc-100 dark:bg-zinc-800 font-bold">apikey</code>, valore la chiave: <div>${copyBtn('key', 'chiave')}</div>`)}
+                            ${step(7, `${b('Corpo richiesta')}: ${b('JSON')}. Aggiungi 4 campi di tipo ${b('Testo')}:
+                                ${field('token', `il tuo codice ${copyBtn('token', 'codice')}`)}
+                                ${field('amount', `variabile ${b('Input comando')}, poi toccala e scegli ${b('Importo')}`)}
+                                ${field('merchant', `${b('Input comando')} → ${b('Esercente')}`)}
+                                ${field('card', `${b('Input comando')} → ${b('Carta o pass')}`)}`)}
+                            ${step(8, `Tocca ${b('Fine')}. Al prossimo pagamento con Apple Pay la spesa comparirà in ${b('Da confermare')}.`)}
+                        </ol>
+                        <p class="text-[10px] text-zinc-400">I nomi possono cambiare leggermente in base alla versione di iOS.</p>
+                    </div>
+
+                    <div class="${card}">
+                        <h4 class="${h}">${num(3)} Comando rapido per bonifici e contanti</h4>
+                        <ol class="space-y-3">
+                            ${step(1, `In ${b('Comandi')} → scheda ${b('Comandi')} → ${b('+')}. Chiamalo "Aggiungi spesa".`)}
+                            ${step(2, `Aggiungi ${b('Chiedi input')}: tipo ${b('Numero')}, domanda "Importo?".`)}
+                            ${step(3, `Aggiungi un altro ${b('Chiedi input')}: tipo ${b('Testo')}, domanda "Descrizione?".`)}
+                            ${step(4, `Aggiungi ${b('Ottieni contenuto dell\'URL')} impostata come ai passi 4-6 sopra, con questi campi JSON:
+                                ${field('token', 'il tuo codice')}
+                                ${field('amount', `tocca ${b('Seleziona variabile')} e poi il ${b('primo')} "Input fornito"`)}
+                                ${field('merchant', `il ${b('secondo')} "Input fornito"`)}
+                                ${field('source', `scrivi <code class="px-1 rounded bg-zinc-100 dark:bg-zinc-800 font-bold">manual</code>`)}`)}
+                            ${step(5, `Per lanciarlo con due tocchi sul retro dell'iPhone: ${b('Impostazioni → Accessibilità → Tocco → Tocca retro → Doppio tocco')} → "Aggiungi spesa".`)}
+                        </ol>
+                    </div>
+
+                    <div class="${card}">
+                        <button onclick="toggleAutoConfirm()" class="w-full flex items-center justify-between text-left gap-3">
+                            <span>
+                                <span class="block text-sm font-bold">Conferma da sola gli esercenti noti</span>
+                                <span class="block text-[11px] text-zinc-500">Se l'esercente è già nella lista qui sotto, la spesa viene registrata senza chiederti niente.</span>
+                            </span>
+                            <span class="w-9 h-5 shrink-0 rounded-full p-0.5 transition ${autoRules.autoConfirm ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-700'}"><span class="block w-4 h-4 rounded-full bg-white shadow transition-transform ${autoRules.autoConfirm ? 'translate-x-4' : ''}"></span></span>
+                        </button>
+                    </div>
+
+                    <div class="${card}">
+                        <h4 class="${h}">Esercenti imparati</h4>
+                        <div>${rulesHtml}</div>
+                    </div>
+                </div>`;
         }
 
     </script>

@@ -2,7 +2,7 @@
 // I file dell'app vengono presi prima dalla rete (così gli aggiornamenti arrivano subito) e,
 // se non c'è connessione, dalla cache. Le librerie esterne restano in cache.
 // Le chiamate al database (supabase.co) non passano mai dalla cache.
-const CACHE = 'productive-life-v1';
+const CACHE = 'productive-life-v2';
 const APP_FILES = ['./', './index.html', './config.js', './sync.js', './manifest.webmanifest', './icons/icon-192.png', './icons/apple-touch-icon.png'];
 const LIBS = [
   'https://cdn.tailwindcss.com/3.4.17',

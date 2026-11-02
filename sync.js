@@ -9,7 +9,8 @@
     const SYNC_KEYS = [
         'productive_fin_categories', 'productive_fin_accounts', 'productive_fin_transactions',
         'productive_fin_recurring', 'productive_habits', 'productive_tasks',
-        'productive_tasks_hide_done', 'productive_theme'
+        'productive_tasks_hide_done', 'productive_theme',
+        'productive_fin_autorules', 'productive_ingest_token'
     ];
 
     const client = configured && window.supabase
@@ -22,6 +23,8 @@
     let appStarted = false;
     let channel = null;
     let pullTimer = null;
+    let pendingTimer = null;
+    let pending = [];
     const pushTimers = {};
 
     const DEVICE_ID = (() => {
@@ -107,6 +110,47 @@
             refreshAllViews();
         }
         setStatus(getDirty().length ? 'saving' : 'ok');
+        await loadPending();
+    }
+
+    // Pagamenti arrivati dall'iPhone (Apple Pay o comando rapido) in attesa di conferma.
+    async function loadPending() {
+        if (!user || !client) return;
+        const { data, error } = await withTimeout(client.from('pending_payments').select('*').order('created_at', { ascending: true }), 10000);
+        if (error) return;
+        pending = data || [];
+        if (appStarted && window.onPendingPayments) window.onPendingPayments(pending);
+    }
+
+    // Toglie un pagamento dalla lista d'attesa. Restituisce true solo al dispositivo che lo ha tolto per primo,
+    // così lo stesso pagamento non diventa due transazioni se PC e iPhone confermano insieme.
+    // null = nessuna connessione.
+    async function claimPending(id) {
+        if (!user || !client) return null;
+        const { data, error } = await withTimeout(client.from('pending_payments').delete().eq('id', id).select('id'), 10000);
+        if (error) return null;
+        pending = pending.filter(p => p.id !== id);
+        return !!(data && data.length);
+    }
+
+    async function createIngestToken() {
+        if (!user || !client) return null;
+        const { data, error } = await client.rpc('create_ingest_token');
+        return error ? null : data;
+    }
+
+    // Invia un pagamento di prova come farebbe il comando dell'iPhone.
+    async function sendTestPayment(token) {
+        try {
+            const res = await fetch(cfg.supabaseUrl + '/rest/v1/rpc/ingest_payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', apikey: cfg.supabaseAnonKey },
+                body: JSON.stringify({ token, amount: '€1,23', merchant: 'Pagamento di prova', card: 'Prova' })
+            });
+            return res.ok;
+        } catch (e) {
+            return false;
+        }
     }
 
     async function syncNow() {
@@ -122,6 +166,10 @@
             .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state', filter: 'user_id=eq.' + user.id }, () => {
                 clearTimeout(pullTimer);
                 pullTimer = setTimeout(syncDown, 300);
+            })
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pending_payments', filter: 'user_id=eq.' + user.id }, () => {
+                clearTimeout(pendingTimer);
+                pendingTimer = setTimeout(loadPending, 300);
             })
             .subscribe();
     }
@@ -146,6 +194,7 @@
             refreshAllViews();
         }
         subscribe();
+        loadPending();
     }
 
     async function start(initApp) {
@@ -235,6 +284,18 @@
         location.reload();
     }
 
+    async function changePassword(e) {
+        e.preventDefault();
+        if (!client || !user) return;
+        const first = document.getElementById('newPassword1').value;
+        const second = document.getElementById('newPassword2').value;
+        if (first !== second) { showToast('Le due password non coincidono'); return; }
+        const { error } = await client.auth.updateUser({ password: first });
+        if (error) { showToast(translateAuthError(error.message)); return; }
+        closeModal('passwordModal');
+        showToast('Password cambiata!');
+    }
+
     function renderAccountBox() {
         const box = document.getElementById('accountBox');
         if (!box) return;
@@ -249,6 +310,10 @@
     window.PLSync = {
         configured,
         isActive: () => !!(user && client),
-        start, onLocalSave, syncNow, submitLogin, signUp, signOut, renderAccountBox
+        getPending: () => pending,
+        ingestUrl: () => cfg.supabaseUrl + '/rest/v1/rpc/ingest_payment',
+        anonKey: () => cfg.supabaseAnonKey,
+        start, onLocalSave, syncNow, submitLogin, signUp, signOut, changePassword, renderAccountBox,
+        loadPending, claimPending, createIngestToken, sendTestPayment
     };
 })();
